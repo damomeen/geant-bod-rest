@@ -1,0 +1,172 @@
+
+import uuid, copy
+import bottle
+import thread
+from threading import Thread
+import httplib
+import json
+
+import nsi_telnet_client
+
+import logging
+logger = logging.getLogger(__name__)
+
+###################################################################
+
+
+BASE_SCHEMA = '/nsi'
+PORT = 8989
+
+MY_NAME = 'psnc'
+DATABASE = {
+    'ehu': '10.0.0.1',
+    'gts': '10.0.0.2',
+}
+
+###################################################################
+
+@bottle.post(BASE_SCHEMA+"/service")
+def service_reserve():
+    logger.info('Service reservation request received')
+    
+    content_type = bottle.request.headers.get("Content-Type")
+    if content_type != "application/json":
+        logger.warning("Unexpected HTTP Content-Type: %s - should be application/json", content_type)
+        bottle.abort("400", 'Content-Type should be application/json instead of %s', content_type)
+        
+    body = bottle.request.body.read()
+    parameters = json.loads(body)
+    parameters = _fill_missing_nsi_request(parameters)
+    properties = _generate_nsi_request_properties(parameters)
+    uid, status = nsi_telnet_client.reserve_service(properties)
+    
+    uid = uid.replace('urn:uuid:', 'urn-uuid-')
+    if status != False:
+        bottle.abort(500, 'Error during the service reseravation')
+        
+    bottle.response.headers['Location'] = BASE_SCHEMA + "/service/reserve/" + uid
+    bottle.response.status = 201
+    logger.debug("HTTP response 201 send, uid is %s", uid)
+    
+@bottle.get(BASE_SCHEMA+"/service")
+def service_reserve_simple():
+    logger.info('Service reservation request received')
+    uid, status = nsi_telnet_client.reserve_service("")
+    
+    uid = uid.replace('urn:uuid:', 'urn-uuid-')
+    if status != False:
+        bottle.abort(500, 'Error during the service reseravation')
+        
+    bottle.response.headers['Location'] = BASE_SCHEMA + "/service/reserve/" + uid
+    bottle.response.status = 201
+    logger.debug("HTTP response 201 send, uid is %s", uid)
+    
+@bottle.delete(BASE_SCHEMA+"/service/<uid>")
+def service_unreserve(uid):
+    logger.info('Service removal request received for %s', uid)
+    uid = uid.replace('urn-uuid-', 'urn:uuid:')
+    nsi_telnet_client.delete_service(uid)
+
+@bottle.get(BASE_SCHEMA+"/register/<name>")
+def register(name):
+    logger.info("Registration from %s island received", name)
+    if name not in DATABASE:
+        bottle.abort("404", 'Not found')
+        logger.error("Island %s is not configured", name)
+    thread.start_new_thread(_get_topology, (name))
+    
+@bottle.get(BASE_SCHEMA+"/topology")
+def topology():
+    logger.info('Topology request received')
+    bottle.response.headers['Content-Type'] =  'application/xml'
+    return nsi_telnet_client.get_nrm_topo()
+
+##################### UTIL FUNCTIONS ########################################
+
+def _fill_missing_nsi_request(conf):
+    default_conf = dict( endpoint = 'http://localhost:9090/nsicontest/ConnectionProvider',
+                                provider_nsa = 'urn:ogf:network:aruba.example:2013:nsa',
+                                reply_to = '',
+                                requester_nsa = 'urn:ogf:network:tester.net:2013:nsa',
+                                reservation_id = 'grid1',
+                                description = 'default reservation',
+                                start_time = '30',
+                                end_time = '60',
+                                version = '0',
+                                service_type = 'http://services.ogf.org/nsi/2013/07/descriptions/EVTS.A-GOLE',
+                                source_stp = 'urn:ogf:network:aruba.example:2013:bi-ps',
+                                dest_stp = 'urn:ogf:network:aruba.example:2013:bi-aruba-bonaire',
+                                ero = '',
+                                capacity = '100',
+                                bidirectional = 'true',
+                                symmetric_path = 'true')
+    default_conf.update(conf)
+    return default_conf
+    
+    
+def _generate_nsi_request_properties(conf):
+    properties = ""
+    for item in conf.items():
+        properties += "%s = %s\n" % item
+    return properties
+
+def _register_all():
+    for name in DATABASE:
+        thread.start_new_thread(_send_register, (name,))
+
+def _send_register(name):
+    logger.debug('Sending registration to %s island', name)
+    if name not in DATABASE:
+        logger.error("Island %s is not configured", name)
+        return 
+    try:
+        ip = DATABASE[name]
+        conn = httplib.HTTPConnection('%s:%s' % (ip, PORT), timeout=10)
+        uri = '/nsi/register/%s' % MY_NAME
+        conn.request('GET', uri)
+        response = conn.getresponse()
+        if response.status != 200:
+            logger.warning("Unsuccesful response received %s", str(response))
+            return
+        thread.start_new_thread(_get_topology, (name))
+    except:
+        logged.exception("Sending registration failed")
+    
+def _get_topology(name):
+    logger.debug('Sending topology request to %s island', name)
+    if name not in DATABASE:
+        logger.error("Island %s is not configured", name)
+        return
+    try:
+        ip = DATABASE[name]
+        conn = httplib.HTTPConnection('%s:%s' % (ip, PORT), timeout=10)
+        uri = '/nsi/topology'
+        conn.request('GET', uri)
+        response = conn.getresponse()
+        if response.status != 200:
+            logger.warning("Unsuccesful response received %s", str(response))
+            return
+        data = response.read()
+        nsi_telnet_client.add_topo(name, data)
+    except:
+        logged.exception("Get toplogy from % island failed", name)
+
+#===============================================
+
+class NSI_rest_server(Thread):  
+    def __init__(self, config):
+        Thread.__init__(self)        
+        self.config = config
+        thread.start_new_thread(_register_all, ())
+        
+    def run(self):
+        """Called when server is starting"""
+        logger.info('Running CherryPy HTTP server on port %s', PORT)
+        bottle.run(host='0.0.0.0', port=PORT, debug=True, server='cherrypy')
+
+
+if __name__ == '__main__':
+    # processed when module is started as a standlone application
+    server = NSI_rest_server(config = None)
+    server.start()
+

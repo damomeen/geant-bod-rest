@@ -45,7 +45,7 @@ def add_topo(name, data):
 
 def _send_nsi_command(command):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #s.settimeout(10)
+    s.settimeout(3)
     s.connect(("localhost", 2200))
     logger.debug("NSI telnet connected")
     _read_until(s, "nsi>")

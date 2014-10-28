@@ -68,7 +68,7 @@ def register(name):
     if name not in GLOBAL_CONFIG["nsi-peers"]:
         bottle.abort("404", 'Not found')
         logger.error("Island %s is not configured", name)
-    thread.start_new_thread(_get_topology, (name))
+    thread.start_new_thread(_get_topology, (name,))
     
 @bottle.get(BASE_SCHEMA+"/topology")
 def topology():
@@ -121,7 +121,7 @@ def _send_register(name):
     try:
         ip = GLOBAL_CONFIG["nsi-peers"][name]
         conn = httplib.HTTPConnection('%s:%s' % (ip, PORT), timeout=10)
-        uri = '/nsi/register/%s' % GLOBAL_CONFIG["nsi-name"]
+        uri = BASE_SCHEMA + '/register/%s' % GLOBAL_CONFIG["nsi-name"]
         conn.request('GET', uri)
         response = conn.getresponse()
         if response.status != 200:

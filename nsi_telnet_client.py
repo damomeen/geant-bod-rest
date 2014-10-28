@@ -44,17 +44,21 @@ def add_topo(name, data):
 ######## UTIL FUNCTIONS #####################
 
 def _send_nsi_command(command):
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.settimeout(3)
-    s.connect(("localhost", 2200))
-    logger.debug("NSI telnet connected")
-    _read_until(s, "nsi>")
-    logger.debug("Sending command: %s ", command)
-    s.send(command+"\n")
-    response = s.recv(4089)
-    logger.debug(" --> Response received: %s", response)
-    s.send("quit\n")
-    return response
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(3)
+        s.connect(("localhost", 2200))
+        logger.debug("NSI telnet connected")
+        _read_until(s, "nsi>")
+        logger.debug("Sending command: %s ", command)
+        s.send(command+"\n")
+        response = s.recv(4089)
+        logger.debug(" --> Response received: %s", response)
+        s.send("quit\n")
+        return response
+    except:
+        logger.exception("Unsuccesful NSI telnet operation")
+        return ""
 
 def _read_until(sock, text):
     data = ""

@@ -125,7 +125,7 @@ def _send_register(name):
         conn.request('GET', uri)
         response = conn.getresponse()
         if response.status != 200:
-            logger.warning("Unsuccesful response received %s", str(response))
+            logger.warning("Unsuccesful response received %s, %s", response.status, response.reason)
             return
         thread.start_new_thread(_get_topology, (name))
     except:
@@ -139,11 +139,11 @@ def _get_topology(name):
     try:
         ip = GLOBAL_CONFIG["nsi-peers"][name]
         conn = httplib.HTTPConnection('%s:%s' % (ip, PORT), timeout=10)
-        uri = '/nsi/topology'
+        uri = BASE_SCHEMA + '/topology'
         conn.request('GET', uri)
         response = conn.getresponse()
         if response.status != 200:
-            logger.warning("Unsuccesful response received %s", str(response))
+            logger.warning("Unsuccesful response received %s, %s", response.status, response.reason)
             return
         data = response.read()
         nsi_telnet_client.add_topo(name, data)

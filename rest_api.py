@@ -13,15 +13,10 @@ logger = logging.getLogger(__name__)
 
 ###################################################################
 
+GLOBAL_CONFIG = {}
 
 BASE_SCHEMA = '/nsi'
 PORT = 8989
-
-MY_NAME = 'psnc'
-DATABASE = {
-    'ehu': '10.0.0.1',
-    'gts': '10.0.0.2',
-}
 
 ###################################################################
 
@@ -70,7 +65,7 @@ def service_unreserve(uid):
 @bottle.get(BASE_SCHEMA+"/register/<name>")
 def register(name):
     logger.info("Registration from %s island received", name)
-    if name not in DATABASE:
+    if name not in GLOBAL_CONF["nsi-peers"]:
         bottle.abort("404", 'Not found')
         logger.error("Island %s is not configured", name)
     thread.start_new_thread(_get_topology, (name))
@@ -111,18 +106,18 @@ def _generate_nsi_request_properties(conf):
     return properties
 
 def _register_all():
-    for name in DATABASE:
+    for name in GLOBAL_CONF["nsi-peers"]:
         thread.start_new_thread(_send_register, (name,))
 
 def _send_register(name):
     logger.debug('Sending registration to %s island', name)
-    if name not in DATABASE:
+    if name not in GLOBAL_CONF["nsi-peers"]:
         logger.error("Island %s is not configured", name)
         return 
     try:
-        ip = DATABASE[name]
+        ip = GLOBAL_CONF["nsi-peers"][name]
         conn = httplib.HTTPConnection('%s:%s' % (ip, PORT), timeout=10)
-        uri = '/nsi/register/%s' % MY_NAME
+        uri = '/nsi/register/%s' % GLOBAL_CONF["nsi-name"]
         conn.request('GET', uri)
         response = conn.getresponse()
         if response.status != 200:
@@ -134,11 +129,11 @@ def _send_register(name):
     
 def _get_topology(name):
     logger.debug('Sending topology request to %s island', name)
-    if name not in DATABASE:
+    if name not in GLOBAL_CONF["nsi-peers"]:
         logger.error("Island %s is not configured", name)
         return
     try:
-        ip = DATABASE[name]
+        ip = GLOBAL_CONF["nsi-peers"][name]
         conn = httplib.HTTPConnection('%s:%s' % (ip, PORT), timeout=10)
         uri = '/nsi/topology'
         conn.request('GET', uri)
@@ -155,8 +150,9 @@ def _get_topology(name):
 
 class NSI_rest_server(Thread):  
     def __init__(self, config):
-        Thread.__init__(self)        
-        self.config = config
+        Thread.__init__(self)     
+        global GLOBAL_CONFIG        
+        GLOBAL_CONFIG = config
         thread.start_new_thread(_register_all, ())
         
     def run(self):

@@ -2,6 +2,7 @@
 import sys, os, logging, time
 from optparse import OptionParser
 from threading import Lock
+import json
 import cherrypy
 from daemon import Daemon
      
@@ -9,7 +10,7 @@ from rest_api import  NSI_rest_server
   
 ##############################################
 
-MODULE_NAME = 'nsi-requester'
+MODULE_NAME = 'nsi-rest'
 __version__ = '0.1'
 
 ##############################################
@@ -30,10 +31,10 @@ class ModuleDaemon(Daemon):
             'lock':Lock(),
             'clients':{},
         }     
-        # load configuration to global dictionary
-        #configFile = '%s/%s.conf' % (self.options.confDir, self.moduleName)
-        #execfile(configFile, globals())
-
+        with file(MODULE_NAME + ".conf", 'r') as f:
+            data = f.read()
+            logger.debug("Config is %s", data)
+            self.config = json.loads(data)
 
     #---------------------
     def run(self):
@@ -42,7 +43,7 @@ class ModuleDaemon(Daemon):
         """
         try:
             # starting interfaces threads
-            server = NSI_rest_server(config = None)
+            server = NSI_rest_server(config = self.config)
             server.start()
         except:
             import traceback

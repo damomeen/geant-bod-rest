@@ -22,7 +22,7 @@ PORT = 8989
 
 @bottle.post(BASE_SCHEMA+"/service")
 def service_reserve():
-    logger.info('Service reservation request received')
+    logger.info('\n\nService reservation request received')
     
     content_type = bottle.request.headers.get("Content-Type")
     if content_type != "application/json":
@@ -45,7 +45,7 @@ def service_reserve():
     
 @bottle.get(BASE_SCHEMA+"/service")
 def service_reserve_simple():
-    logger.info('Service reservation request received')
+    logger.info('\n\nService reservation request received')
     uid, status = nsi_telnet_client.reserve_service("")
     
     uid = uid.replace('urn:uuid:', 'urn-uuid-')
@@ -55,24 +55,26 @@ def service_reserve_simple():
     bottle.response.headers['Location'] = BASE_SCHEMA + "/service/reserve/" + uid
     bottle.response.status = 201
     logger.debug("HTTP response 201 send, uid is %s", uid)
+    return "Service reservation accepted"
     
 @bottle.delete(BASE_SCHEMA+"/service/<uid>")
 def service_unreserve(uid):
-    logger.info('Service removal request received for %s', uid)
+    logger.info('\n\nService removal request received for %s', uid)
     uid = uid.replace('urn-uuid-', 'urn:uuid:')
     nsi_telnet_client.delete_service(uid)
 
 @bottle.get(BASE_SCHEMA+"/register/<name>")
 def register(name):
-    logger.info("Registration from %s island received", name)
+    logger.info("\n\nRegistration from %s island received", name)
     if name not in GLOBAL_CONFIG["nsi-peers"]:
         bottle.abort("404", 'Not found')
         logger.error("Island %s is not configured", name)
     thread.start_new_thread(_get_topology, (name,))
+    return "Registration accepted"
     
 @bottle.get(BASE_SCHEMA+"/topology")
 def topology():
-    logger.info('Topology request received')
+    logger.info('\n\nTopology request received')
     bottle.response.headers['Content-Type'] =  'application/xml'
     return nsi_telnet_client.get_nrm_topo()
 
@@ -120,8 +122,10 @@ def _send_register(name):
         return 
     try:
         ip = GLOBAL_CONFIG["nsi-peers"][name]
-        conn = httplib.HTTPConnection('%s:%s' % (ip, PORT), timeout=10)
+        endpoint = '%s:%s' % (ip, PORT)
+        conn = httplib.HTTPConnection(endpoint, timeout=10)
         uri = BASE_SCHEMA + '/register/%s' % GLOBAL_CONFIG["nsi-name"]
+        logger.debug("Sending HTTP GET %s%s", endpoint, uri)
         conn.request('GET', uri)
         response = conn.getresponse()
         if response.status != 200:
@@ -138,8 +142,10 @@ def _get_topology(name):
         return
     try:
         ip = GLOBAL_CONFIG["nsi-peers"][name]
-        conn = httplib.HTTPConnection('%s:%s' % (ip, PORT), timeout=10)
+        endpoint = '%s:%s' % (ip, PORT)
+        conn = httplib.HTTPConnection(endpoint, timeout=10)
         uri = BASE_SCHEMA + '/topology'
+        logger.debug("Sending HTTP GET %s%s", endpoint, uri)
         conn.request('GET', uri)
         response = conn.getresponse()
         if response.status != 200:

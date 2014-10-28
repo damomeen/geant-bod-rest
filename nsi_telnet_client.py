@@ -31,7 +31,7 @@ def get_nrm_topo():
     logger.debug("Generated nrm topo is %s", topo_name)
     with file(NSI+"/%s.xml" % topo_name, 'r') as f:
         data = f.read()
-        logger.debug("NRM topo is: %s", data)
+        #logger.debug("NRM topo is: %s", data)
         return data
         
 def add_topo(name, data):

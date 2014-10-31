@@ -81,22 +81,23 @@ def topology():
 ##################### UTIL FUNCTIONS ########################################
 
 def _fill_missing_nsi_request(conf):
-    default_conf = dict( endpoint = 'http://localhost:9090/nsicontest/ConnectionProvider',
-                                provider_nsa = 'urn:ogf:network:aruba.example:2013:nsa',
-                                reply_to = '',
-                                requester_nsa = 'urn:ogf:network:tester.net:2013:nsa',
-                                reservation_id = 'grid1',
-                                description = 'default reservation',
-                                start_time = '30',
-                                end_time = '60',
-                                version = '0',
-                                service_type = 'http://services.ogf.org/nsi/2013/07/descriptions/EVTS.A-GOLE',
-                                source_stp = 'urn:ogf:network:aruba.example:2013:bi-ps',
-                                dest_stp = 'urn:ogf:network:aruba.example:2013:bi-aruba-bonaire',
-                                ero = '',
-                                capacity = '100',
-                                bidirectional = 'true',
-                                symmetric_path = 'true')
+    default_conf = {  'endpoint' : 'http://localhost:9090/nsicontest/ConnectionProvider',
+                            'provider_nsa' : 'urn:ogf:network:psnc:2013:nsa',
+                            'reply_to' : 'http://localhost:9090/nsicontest/ConnectionRequester',
+                            'requester_nsa' : 'urn:ogf:network:psnc:2013:nsa',
+                            'reservation_id' : 'grid1',
+                            'description' : 'default reservation',
+                            'start_time' : '60',
+                            'end_time' : '120',
+                            'version' : '0',
+                            'service_type' : 'http://services.ogf.org/nsi/2013/07/descriptions/EVTS.A-GOLE',
+                            'source_stp' : 'urn:ogf:network:psnc:2013:mx2.12',
+                            'dest_stp' : 'urn:ogf:network:psnc:2013:mx1.18',
+                            'ero' : '',
+                            'capacity' : '100',
+                            'bidirectional' : 'true',
+                            'symmetric_path' : 'true',
+    }
     default_conf.update(conf)
     return default_conf
     

@@ -4,17 +4,16 @@ import logging
 logger = logging.getLogger(__name__)
 
 NSI = "/home/mininet/nsi-v3"
-NSI_ETC = "/tmp"
+NSI_ETC = NSI + "/etc"
     
 def reserve_service(properties):
     logger.debug("Calling NSI telnet reserve_service function")
-    _generate_file(NSI_ETC + "/request.prioperties", properties)
-    _send_nsi_command('req new')
-    uid = _send_nsi_command('req reserve')
-    status = _send_nsi_command('req querysync %s' % uid)
-    status = _parse_connection_status(status)
-    if status['reservation'] != 'RESERVE_HELD':
-        logger.error("reservation failed %s", status)
+    if properties != "":
+        _generate_file(NSI_ETC + "/request.prioperties", properties)
+    uid = _send_nsi_command('req rescomprov')
+    logger.debug("uid is %s", uid)
+    if "urn:uuid:" not in uid:
+        logger.error("reservation failed %s", uid)
         return uid, False
     return uid, True
     

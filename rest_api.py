@@ -22,7 +22,7 @@ PORT = 8989
 
 @bottle.post(BASE_SCHEMA+"/service")
 def service_reserve():
-    logger.info('\n\nService reservation request received')
+    logger.info('\n\n\t\tService reservation request received\n')
     
     content_type = bottle.request.headers.get("Content-Type")
     if content_type != "application/json":
@@ -36,7 +36,7 @@ def service_reserve():
     uid, status = nsi_telnet_client.reserve_service(properties)
     
     uid = uid.replace('urn:uuid:', 'urn-uuid-')
-    if status != False:
+    if status == False:
         bottle.abort(500, 'Error during the service reseravation')
         
     bottle.response.headers['Location'] = BASE_SCHEMA + "/service/reserve/" + uid
@@ -45,12 +45,12 @@ def service_reserve():
     
 @bottle.get(BASE_SCHEMA+"/service")
 def service_reserve_simple():
-    logger.info('\n\nService reservation request received')
+    logger.info('\n\n\t\tService reservation request received\n')
     uid, status = nsi_telnet_client.reserve_service("")
     
     uid = uid.replace('urn:uuid:', 'urn-uuid-')
-    if status != False:
-        bottle.abort(500, 'Error during the service reseravation')
+    if status == False:
+        bottle.abort(500, 'Error during the service reservation')
         
     bottle.response.headers['Location'] = BASE_SCHEMA + "/service/reserve/" + uid
     bottle.response.status = 201
@@ -59,13 +59,13 @@ def service_reserve_simple():
     
 @bottle.delete(BASE_SCHEMA+"/service/<uid>")
 def service_unreserve(uid):
-    logger.info('\n\nService removal request received for %s', uid)
+    logger.info('\n\n\t\tService removal request received for %s\n', uid)
     uid = uid.replace('urn-uuid-', 'urn:uuid:')
     nsi_telnet_client.delete_service(uid)
 
 @bottle.get(BASE_SCHEMA+"/register/<name>")
 def register(name):
-    logger.info("\n\nRegistration from %s island received", name)
+    logger.info("\n\n\t\tRegistration from %s island received\n", name)
     if name not in GLOBAL_CONFIG["nsi-peers"]:
         bottle.abort("404", 'Not found')
         logger.error("Island %s is not configured", name)
@@ -74,7 +74,7 @@ def register(name):
     
 @bottle.get(BASE_SCHEMA+"/topology")
 def topology():
-    logger.info('\n\nTopology request received')
+    logger.info('\n\n\t\tTopology request received\n')
     bottle.response.headers['Content-Type'] =  'application/xml'
     return nsi_telnet_client.get_nrm_topo()
 

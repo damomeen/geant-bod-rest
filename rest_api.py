@@ -43,7 +43,7 @@ def service_reserve():
     bottle.response.status = 201
     logger.debug("HTTP response 201 send, uid is %s", uid)
     
-@bottle.get(BASE_SCHEMA+"/service")
+#@bottle.get(BASE_SCHEMA+"/service")
 def service_reserve_simple():
     logger.info('\n\n\t\tService reservation request received\n')
     uid, status = nsi_telnet_client.reserve_service("")
@@ -164,6 +164,7 @@ class NSI_rest_server(Thread):
         Thread.__init__(self)     
         global GLOBAL_CONFIG       
         GLOBAL_CONFIG = config
+        nsi_telnet_client.get_nrm_topo()
         thread.start_new_thread(_register_all, ())
         
     def run(self):

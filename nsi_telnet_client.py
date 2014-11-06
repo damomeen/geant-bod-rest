@@ -9,7 +9,7 @@ NSI_ETC = NSI + "/etc"
 def reserve_service(properties):
     logger.debug("Calling NSI telnet reserve_service function")
     if properties != "":
-        _generate_file(NSI_ETC + "/request.prioperties", properties)
+        _generate_file(NSI_ETC + "/request.properties", properties)
     uid = _send_nsi_command('req rescomprov')
     logger.debug("uid is %s", uid)
     if "urn:uuid:" not in uid:

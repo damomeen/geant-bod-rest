@@ -20,7 +20,7 @@ def reserve_service(properties):
 def delete_service(uid):
     logger.debug("Calling NSI telnet delete_service function with uid %s", uid)
     _send_nsi_command('req new')
-    _send_nsi_command('req release %s', uid)
+    _send_nsi_command('req release %s' % uid)
     logger.debug("Reservation removed")
     
 def get_nrm_topo():
@@ -30,6 +30,7 @@ def get_nrm_topo():
     logger.debug("Generated nrm topo is %s", topo_name)
     with file(NSI+"/%s.xml" % topo_name, 'r') as f:
         data = f.read()
+        add_topo(topo_name, data)
         #logger.debug("NRM topo is: %s", data)
         return data
         
@@ -37,7 +38,7 @@ def add_topo(name, data):
     logger.debug("Calling NSI telnet add_topo function with name %s", name)
     filename = "%s/%s.xml" % (NSI_ETC, name)
     _generate_file(filename, data)
-    _send_nsi_command('topo add %s', filename)
+    _send_nsi_command('topo add %s' %filename)
   
   
 ######## UTIL FUNCTIONS #####################

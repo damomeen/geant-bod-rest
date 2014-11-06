@@ -5,6 +5,7 @@ import thread
 from threading import Thread
 import httplib
 import json
+import time
 
 import nsi_telnet_client
 
@@ -109,6 +110,7 @@ def _generate_nsi_request_properties(conf):
     return properties
 
 def _register_all():
+    time.sleep(5)
     try:
         logger.debug("Starting registration process for peers: %s", GLOBAL_CONFIG["nsi-peers"])
         for name in GLOBAL_CONFIG["nsi-peers"]:

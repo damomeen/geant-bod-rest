@@ -134,6 +134,7 @@ def _send_register(name):
         if response.status != 200:
             logger.warning("Unsuccesful response received %s, %s", response.status, response.reason)
             return
+        logger.debug("Registration to %s successful", name)
         thread.start_new_thread(_get_topology, (name))
     except:
         logged.exception("Sending registration failed")

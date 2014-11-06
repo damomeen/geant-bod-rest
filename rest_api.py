@@ -5,6 +5,7 @@ import thread
 from threading import Thread
 import httplib
 import json
+import time
 
 import nsi_telnet_client
 
@@ -43,7 +44,7 @@ def service_reserve():
     bottle.response.status = 201
     logger.debug("HTTP response 201 send, uid is %s", uid)
     
-@bottle.get(BASE_SCHEMA+"/service")
+#@bottle.get(BASE_SCHEMA+"/service")
 def service_reserve_simple():
     logger.info('\n\n\t\tService reservation request received\n')
     uid, status = nsi_telnet_client.reserve_service("")
@@ -109,6 +110,7 @@ def _generate_nsi_request_properties(conf):
     return properties
 
 def _register_all():
+    time.sleep(5)
     try:
         logger.debug("Starting registration process for peers: %s", GLOBAL_CONFIG["nsi-peers"])
         for name in GLOBAL_CONFIG["nsi-peers"]:
@@ -164,6 +166,7 @@ class NSI_rest_server(Thread):
         Thread.__init__(self)     
         global GLOBAL_CONFIG       
         GLOBAL_CONFIG = config
+        nsi_telnet_client.get_nrm_topo()
         thread.start_new_thread(_register_all, ())
         
     def run(self):

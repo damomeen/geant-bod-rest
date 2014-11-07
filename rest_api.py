@@ -28,7 +28,7 @@ def service_reserve():
     content_type = bottle.request.headers.get("Content-Type")
     if content_type != "application/json":
         logger.warning("Unexpected HTTP Content-Type: %s - should be application/json", content_type)
-        bottle.abort("400", 'Content-Type should be application/json instead of %s', content_type)
+        bottle.abort(400, 'Content-Type should be application/json instead of %s', content_type)
         
     body = bottle.request.body.read()
     parameters = json.loads(body)
@@ -68,7 +68,7 @@ def service_unreserve(uid):
 def register(name):
     logger.info("\n\n\t\tRegistration from %s island received\n", name)
     if name not in GLOBAL_CONFIG["nsi-peers"]:
-        bottle.abort("404", 'Not found')
+        bottle.abort(404, 'Not found')
         logger.error("Island %s is not configured", name)
     thread.start_new_thread(_get_topology, (name,))
     return "Registration accepted"

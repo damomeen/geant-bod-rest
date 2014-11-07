@@ -22,15 +22,20 @@ def delete_service(uid):
     _send_nsi_command('req new')
     _send_nsi_command('req release %s' % uid)
     logger.debug("Reservation removed")
-    
+
+TOPO_NAME = None    
 def get_nrm_topo():
     logger.debug("Calling NSI telnet get_nrm_topo function")
-    response = _send_nsi_command('nrm topo')
-    topo_name = response.replace("nrm topology exported as ", "").strip()
-    logger.debug("Generated nrm topo is %s", topo_name)
-    with file(NSI+"/%s.xml" % topo_name, 'r') as f:
+    if TOPO_NAME == None:
+        response = _send_nsi_command('nrm topo')
+        global TOPO_NAME
+        TOPO_NAME = response.replace("nrm topology exported as ", "").strip()
+        logger.debug("Generated nrm topo is %s", TOPO_NAME)
+    else:
+        logger.debug("Reading %s file", TOPO_NAME)
+    with file(NSI+"/%s.xml" % TOPO_NAME, 'r') as f:
         data = f.read()
-        add_topo(topo_name, data)
+        add_topo(TOPO_NAME, data)
         #logger.debug("NRM topo is: %s", data)
         return data
         

@@ -26,9 +26,9 @@ def delete_service(uid):
 TOPO_NAME = None    
 def get_nrm_topo():
     logger.debug("Calling NSI telnet get_nrm_topo function")
+    global TOPO_NAME
     if TOPO_NAME == None:
         response = _send_nsi_command('nrm topo')
-        global TOPO_NAME
         TOPO_NAME = response.replace("nrm topology exported as ", "").strip()
         logger.debug("Generated nrm topo is %s", TOPO_NAME)
     else:

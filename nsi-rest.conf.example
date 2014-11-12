@@ -3,5 +3,7 @@
     "nsi-peers" : {
         "ehu": "10.0.0.1",
         "gts": "172.16.0.101"
-    }
+    },
+    "nsi-dir": "/home/sa/nsi-v3"
+
 }

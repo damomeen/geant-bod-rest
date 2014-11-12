@@ -167,6 +167,7 @@ class NSI_rest_server(Thread):
         Thread.__init__(self)     
         global GLOBAL_CONFIG       
         GLOBAL_CONFIG = config
+        nsi_telnet_client.NSI = config["nsi-dir"]        
         nsi_telnet_client.get_nrm_topo()
         thread.start_new_thread(_register_all, ())
         

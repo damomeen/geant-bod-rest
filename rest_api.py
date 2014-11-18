@@ -6,6 +6,7 @@ from threading import Thread
 import httplib
 import json
 import time
+import urllib
 
 import nsi_telnet_client
 
@@ -25,10 +26,10 @@ PORT = 8989
 def service_reserve():
     logger.info('\n\n\t\tService reservation request received\n')
     
-    content_type = bottle.request.headers.get("Content-Type")
-    if content_type != "application/json":
-        logger.warning("Unexpected HTTP Content-Type: %s - should be application/json", content_type)
-        bottle.abort(400, 'Content-Type should be application/json instead of %s', content_type)
+    #content_type = bottle.request.headers.get("Content-Type")
+    #if content_type != "application/json":
+    #    logger.warning("Unexpected HTTP Content-Type: %s - should be application/json", content_type)
+    #    bottle.abort(400, 'Content-Type should be application/json instead of %s', content_type)
         
     body = bottle.request.body.read()
     parameters = json.loads(body)
@@ -43,11 +44,19 @@ def service_reserve():
     bottle.response.headers['Location'] = BASE_SCHEMA + "/service/reserve/" + uid
     bottle.response.status = 201
     logger.debug("HTTP response 201 send, uid is %s", uid)
+    return "Reservation created"
     
-#@bottle.get(BASE_SCHEMA+"/service")
+@bottle.get(BASE_SCHEMA+"/service")
 def service_reserve_simple():
     logger.info('\n\n\t\tService reservation request received\n')
-    uid, status = nsi_telnet_client.reserve_service("")
+    logger.info("query_string is %s", str(bottle.request.query_string))
+    #logger.info("url is %s", bottle.request.url)
+    #logger.info("urlparts is %s", bottle.request.urlparts)
+    parameters = urllib.unquote(bottle.request.query_string).decode('utf8')
+    parameters = json.loads(parameters)
+    properties = _generate_nsi_request_properties(parameters)
+    logger.debug("properties are %s", properties)
+    uid, status = nsi_telnet_client.reserve_service(properties)
     
     uid = uid.replace('urn:uuid:', 'urn-uuid-')
     if status == False:

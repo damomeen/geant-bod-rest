@@ -1,4 +1,4 @@
-geant-nsi-rest
+geant-bod-rest
 ==============
 
-REST interface for Géant NSI component
+REST interface for Géant BoD (AutoBAHN) component
